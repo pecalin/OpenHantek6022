@@ -25,6 +25,12 @@ name: Build
 on: [push]
 
 
+# tag pushes upload the packages to the release, this needs write access
+# independent of the repository's default token permissions (read only on new repos and forks)
+permissions:
+  contents: write
+
+
 env:
   # CMake build type (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
