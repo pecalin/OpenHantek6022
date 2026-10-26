@@ -39,8 +39,9 @@ if (GIT_EXECUTABLE AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
         set( VERSION "${VERSION}-devdrop" )
     elseif( ${ZERO_POS} GREATER 0 ) # x.y.z(-dirty)
         # message(STATUS "TAG")
+        # --tags: also lightweight tags, e.g. created by a GitHub release, annotated tags are preferred
         execute_process(
-            COMMAND ${GIT_EXECUTABLE} describe --dirty
+            COMMAND ${GIT_EXECUTABLE} describe --tags --dirty
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             OUTPUT_VARIABLE VERSION
             OUTPUT_STRIP_TRAILING_WHITESPACE
