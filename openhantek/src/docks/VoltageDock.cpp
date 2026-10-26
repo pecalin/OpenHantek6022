@@ -128,7 +128,8 @@ VoltageDock::VoltageDock( DsoSettingsScope *scope, const Dso::ControlSpecificati
                          Dso::MathMode mathMode = Dso::getMathMode( this->scope->voltage[ channel ] );
                          setAttn( channel, this->scope->voltage[ channel ].probeAttn );
                          emit modeChanged( mathMode );
-                         emit usedChannelChanged( channel, Dso::mathChannelsUsed( mathMode ) );
+                         emit usedChannelChanged( channel,
+                                                  this->scope->voltage[ channel ].used ? Dso::mathChannelsUsed( mathMode ) : 0 );
                      }
                  } );
         connect( b.usedCheckBox, &QCheckBox::toggled, this, [ this, channel ]( bool checked ) {

@@ -338,6 +338,7 @@ void DsoWidget::setColors() {
     paletteNow.setColor( QPalette::WindowText, view->colors->text );
     settingsSamplesOnScreen->setPalette( paletteNow );
     settingsSamplerateLabel->setPalette( paletteNow );
+    settingsOversampleLabel->setPalette( paletteNow );
     settingsTimebaseLabel->setPalette( paletteNow );
     settingsFrequencybaseLabel->setPalette( paletteNow );
     markerInfoLabel->setPalette( paletteNow );
@@ -918,7 +919,7 @@ void DsoWidget::updateZoom( bool enabled ) {
     mainLayout->setRowStretch( zoomScopeRow, enabled ? int( pow( 2, view->zoomHeightIndex ) ) : 0 );
     zoomScope->setVisible( enabled );
     zoomSliders.voltageOffsetSlider->setVisible( enabled );
-    zoomSliders.triggerPositionSlider->setVisible( enabled );
+    zoomSliders.triggerPositionSlider->setVisible( enabled && scope->trigger.mode != Dso::TriggerMode::ROLL );
     zoomSliders.triggerLevelSlider->setVisible( enabled );
     // Show time-/frequencybase and zoom factor if the magnified scope is shown
     markerLayout->setStretch( 3, enabled ? 1 : 0 );

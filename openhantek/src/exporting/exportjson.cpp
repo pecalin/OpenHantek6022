@@ -70,7 +70,7 @@ void ExporterJSON::fillData( QTextStream &jsonStream, const ExporterData &dto ) 
                 if ( row < voltageData[ channel ]->samples.size() )
                     objInStream << voltageData[ channel ]->samples[ row ];
                 else
-                    objInStream << "\": null";
+                    objInStream << "null";
                 objInStream << ",\n";
             }
 

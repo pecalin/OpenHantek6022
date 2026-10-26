@@ -113,14 +113,17 @@ void GraphGenerator::generateGraphsTYvoltage( PPresult *result ) {
         // sinc interpolation if there are too less samples on screen
         // https://ccrma.stanford.edu/~jos/resample/resample.pdf
         if ( interpolationSinc && dotsOnScreen < view->screenWidth ) {
-            // we would need sincWidth, but we take what we get
+            // we would need sincWidth samples left of the visible trace, but we take what we get
             const unsigned int left = std::min( sincWidth, unsigned( leftmostSample ) );
             horizontalFactor /= oversample;                                     // distance between (resampled) dots
             dotsOnScreen = unsigned( DIVS_TIME / horizontalFactor + 0.99 + 1 ); // dot count after resample
-            const unsigned int resampleSize = ( left + dotsOnScreen + sincWidth ) * oversample;
+            // left margin + visible samples + right margin, but do not read beyond the available samples
+            const unsigned int neededSamples = left + dotsOnScreen / oversample + 1 + sincWidth;
+            const unsigned int availableSamples = unsigned( sampleValues.samples.size() ) - unsigned( leftmostSample ) + left;
+            const unsigned int resampleSize = std::min( neededSamples, availableSamples ) * oversample;
             resample.clear();                // invalidate old content
             resample.resize( resampleSize ); //  ... and init with zero because we accumulate the convolution
-            auto sampleIt = sampleValues.samples.cbegin() + leftmostSample;
+            auto sampleIt = sampleValues.samples.cbegin() + leftmostSample - left;
             for ( unsigned int resamplePos = 0; resamplePos < resampleSize; resamplePos += oversample ) {
                 resample[ resamplePos ] += *sampleIt; // sinc( 0 ) sum up, do NOT assign
                 auto sincIt = sinc.cbegin();          // -> one half of sinc pulse without sinc(0)
@@ -134,10 +137,10 @@ void GraphGenerator::generateGraphsTYvoltage( PPresult *result ) {
                 }
                 ++sampleIt;
             }
-            leftmostPosition *= oversample;            // scale the position accordingly
-            graphVoltage.reserve( resampleSize );      // provide enough space for resampled dots
-            sampleIterator = resample.cbegin() + left; // now switch from samples -> resamples
-            sampleEnd = resample.cend();               // ... same for end of samples
+            leftmostPosition *= oversample;                         // scale the position accordingly
+            graphVoltage.reserve( resampleSize );                   // provide enough space for resampled dots
+            sampleIterator = resample.cbegin() + left * oversample; // now switch from samples -> resamples
+            sampleEnd = resample.cend();                            // ... same for end of samples
         }
 
         graphVoltage.clear();   // remove all previous dots and fill in new trace as GL_LINE_STRIP

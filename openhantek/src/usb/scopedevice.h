@@ -175,7 +175,7 @@ class ScopeDevice : public QObject {
     unsigned findIteration;
     int verboseLevel = 0;
     const UniqueUSBid uniqueUSBdeviceID;
-    int nInterface;
+    int nInterface = -1;
     unsigned outPacketLength; ///< Packet length for the OUT endpoint
     unsigned inPacketLength;  ///< Packet length for the IN endpoint
 

@@ -120,14 +120,16 @@ int main( int argc, char *argv[] ) {
         doNotTranslate = storeSettings.value( "doNotTranslate", false ).toBool();
         storeSettings.endGroup();
 
-        // Pre-parse international flag so it can affect the command line help texts
-        QCoreApplication translationApp( argc, argv );
-        QCommandLineParser tp;
-        QCommandLineOption tintOption(
-            { "i", "international" }, QCoreApplication::translate( "main", "Show the international interface, do not translate" ) );
-        tp.addOption( tintOption );
-        tp.parse( translationApp.arguments() );
-        useLocale = !tp.isSet( tintOption );
+        { // Pre-parse international flag so it can affect the command line help texts
+            // own scope: Qt allows only one application object at a time
+            QCoreApplication translationApp( argc, argv );
+            QCommandLineParser tp;
+            QCommandLineOption tintOption( { "i", "international" },
+                                           QCoreApplication::translate( "main", "Show the international interface, do not translate" ) );
+            tp.addOption( tintOption );
+            tp.parse( translationApp.arguments() );
+            useLocale = !tp.isSet( tintOption );
+        }
 
         QCoreApplication parserApp( argc, argv );
         QCommandLineParser p;
@@ -446,8 +448,8 @@ int main( int argc, char *argv[] ) {
 
     postProcessing.moveToThread( &postProcessingThread );
     QObject::connect( &dsoControl, &HantekDsoControl::samplesAvailable, &postProcessing, &PostProcessing::input );
-    QObject::connect( &postProcessing, &PostProcessing::processingFinished, &exportRegistry, &ExporterRegistry::input,
-                      Qt::DirectConnection );
+    // queued into the GUI thread, the exporter lists are also changed there by setExporterEnabled()
+    QObject::connect( &postProcessing, &PostProcessing::processingFinished, &exportRegistry, &ExporterRegistry::input );
 
     if ( verboseLevel )
         qDebug() << startupTime.elapsed() << "ms:"
@@ -463,7 +465,7 @@ int main( int argc, char *argv[] ) {
     // This is the default setting for Mesa (Linux, FreeBSD)
     QString GLSLversion = GLSL120;
 
-#if defined( Q_OS_MAC )
+#if defined( Q_OS_MACOS )
     // recent MacOS uses OpenGL 4.4, but at least 3.3 for very old systems (<2011)
     GLSLversion = GLSL150;
 #elif defined( Q_PROCESSOR_ARM )

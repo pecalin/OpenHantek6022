@@ -877,7 +877,7 @@ void GlScope::drawMarkers() {
 
 
 void GlScope::drawVoltageChannelGraph( ChannelID channel, Graph &graph, int historyIndex ) {
-    if ( !scope->voltage[ channel ].used )
+    if ( !scope->voltage[ channel ].used || channel >= graph.vaoVoltage.size() || !graph.vaoVoltage[ channel ].first )
         return;
 
     m_program->setUniformValue( colorLocation, view->colors->voltage[ channel ].darker( 100 + 10 * historyIndex ) );
@@ -890,7 +890,7 @@ void GlScope::drawVoltageChannelGraph( ChannelID channel, Graph &graph, int hist
 
 
 void GlScope::drawHistogramChannelGraph( ChannelID channel, Graph &graph, int historyIndex ) {
-    if ( graph.vaoHistogram.empty() || !scope->voltage[ channel ].used )
+    if ( !scope->voltage[ channel ].used || channel >= graph.vaoHistogram.size() || !graph.vaoHistogram[ channel ].first )
         return;
 
     m_program->setUniformValue( colorLocation, view->colors->voltage[ channel ].darker( 100 + 10 * historyIndex ) );
@@ -903,7 +903,8 @@ void GlScope::drawHistogramChannelGraph( ChannelID channel, Graph &graph, int hi
 
 
 void GlScope::drawSpectrumChannelGraph( ChannelID channel, Graph &graph, int historyIndex ) {
-    if ( !scope->spectrum[ channel ].used )
+    // e.g. graphs from XY mode in the phosphor history have no spectrum
+    if ( !scope->spectrum[ channel ].used || channel >= graph.vaoSpectrum.size() || !graph.vaoSpectrum[ channel ].first )
         return;
 
     m_program->setUniformValue( colorLocation, view->colors->spectrum[ channel ].darker( 100 + 10 * historyIndex ) );

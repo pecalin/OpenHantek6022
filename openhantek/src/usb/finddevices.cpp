@@ -85,7 +85,7 @@ int FindDevices::updateDeviceList() {
             ++it;
         }
     }
-    libusb_free_device_list( deviceList, false );
+    libusb_free_device_list( deviceList, 1 ); // unref, ScopeDevice keeps its own reference
     return changes; // report number of all detected bus changes (added + removed devices)
 }
 

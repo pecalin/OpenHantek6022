@@ -222,10 +222,10 @@ double stringToValue( const QString &text, Unit unit, bool *ok ) {
             return value * 1e-9;
         else if ( unitString.startsWith( "µ" ) ) // my
             return value * 1e-6;
+        else if ( unitString.startsWith( "min" ) ) // check before 'm'
+            return value * 60;
         else if ( unitString.startsWith( 'm' ) )
             return value * 1e-3;
-        else if ( unitString.startsWith( "min" ) )
-            return value * 60;
         else if ( unitString.startsWith( 'h' ) )
             return value * 3600;
         else

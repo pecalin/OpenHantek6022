@@ -107,9 +107,9 @@ class DsoWidget : public QWidget {
     GlScope *zoomScope; ///< The optional magnified scope screen
 
   private:
-    double samplerate;
+    double samplerate = 0.0;
     unsigned oversample = 1;
-    double timebase;
+    double timebase = 0.0;
     double pulseWidth1 = 0.0;
     double pulseWidth2 = 0.0;
     double zoomFactor = 1.0;

@@ -912,7 +912,7 @@ void HantekDsoControl::convertRawDataToSamples() {
         liveOffset /= resultSamples;
 
         if ( scope->liveCalibrationActive ) {
-            if ( maxValue - minValue > 10 || liveOffset > 20 ) { // big jitter/noise, offset too big
+            if ( maxValue - minValue > 10 || fabs( liveOffset ) > 20 ) { // big jitter/noise, offset too big
                 emit liveCalibrationError();                     // stop live calibration without storing something
             } else {
                 offsetCorrection[ gainIndex ][ channel ] = liveOffset;
@@ -1067,23 +1067,31 @@ Dso::ErrorCode HantekDsoControl::stringCommand( const QString &commandString ) {
 
         uint8_t codeIndex = 0;
         hexParse( commandParts[ 1 ], &codeIndex, 1 );
-        QString data = commandString.section( ' ', 2, -1, QString::SectionSkipEmpty );
 
         if ( !control[ codeIndex ] )
             return Dso::ErrorCode::UNSUPPORTED;
+
+        // validate all data bytes before the command is modified and marked as pending
+        // parse each part separately, a byte can have one or two hex digits ("cc e0 1 0" -> 0x01 0x00)
+        const unsigned size = unsigned( control[ codeIndex ]->size() );
+        if ( unsigned( commandParts.count() - 2 ) != size )
+            return Dso::ErrorCode::PARAMETER;
+        std::vector< uint8_t > data( size );
+        for ( unsigned index = 0; index < size; ++index ) {
+            if ( 1 != hexParse( commandParts[ int( index ) + 2 ], &data[ index ], 1 ) )
+                return Dso::ErrorCode::PARAMETER;
+        }
 
         QString name = "";
         if ( codeIndex >= 0xe0 && codeIndex <= 0xe6 )
             name = controlNames[ codeIndex - 0xe0 ];
 
         ControlCommand *c = modifyCommand< ControlCommand >( ControlCode( codeIndex ) );
-        hexParse( data, c->data(), unsigned( c->size() ) );
+        memcpy( c->data(), data.data(), size );
         if ( verboseLevel > 2 )
             qDebug().noquote() << "  " + commandParts[ 0 ]
                                << QString( "0x%1 (%2) %3" )
                                       .arg( QString::number( codeIndex, 16 ), name, decDump( c->data(), unsigned( c->size() ) ) );
-        if ( int( c->size() ) != commandParts.count() - 2 )
-            return Dso::ErrorCode::PARAMETER;
         return Dso::ErrorCode::NONE;
     } else if ( commandParts[ 0 ] == "freq" ) {     // simple example for manual frequency command "freq nn"
         if ( commandParts.count() < 2 )             // command and one parameter needed

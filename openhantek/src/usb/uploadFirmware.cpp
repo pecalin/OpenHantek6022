@@ -35,9 +35,11 @@ bool UploadFirmware::startUpload( ScopeDevice *scopeDevice ) {
     // Write firmware from resources to temp files
     QFile firmwareRes( QString( ":/firmware/%1-firmware.hex" ).arg( scopeDevice->getModel()->firmwareToken ) );
     auto temp_firmware_path = std::unique_ptr< QTemporaryFile >( QTemporaryFile::createNativeFile( firmwareRes ) );
-    if ( !temp_firmware_path )
+    if ( !temp_firmware_path || !temp_firmware_path->open() ) {
+        errorMessage = TR( "Couldn't create temporary firmware file" );
+        libusb_close( handle );
         return false;
-    temp_firmware_path->open();
+    }
 
 #ifdef Q_OS_LINUX
     // Detach kernel driver, reported to lead to an error on FreeBSD, MacOSX and Windows

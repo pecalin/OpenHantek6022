@@ -171,7 +171,7 @@ void MathChannel::calculate( DSOsamples &result ) {
                 auto srcIt = result.data[ src ].rbegin();
                 y = average;
                 for ( auto dstIt = mathChannel.rbegin(), dstEnd = mathChannel.rend(); dstIt != dstEnd; ++srcIt, ++dstIt ) {
-                    *dstIt += y / 2; // the 2nd 50%
+                    *dstIt = sign * ( *dstIt + y / 2 ); // the 2nd 50%, invert if requested
                     y = a0 * *srcIt + b1 * y;
                 }
             } break;

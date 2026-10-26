@@ -168,7 +168,7 @@ class HantekDsoControl : public QObject {
     void controlSetSamplerate( uint8_t sampleIndex );
 
     /// Pointers to control commands
-    ControlCommand *control[ 255 ] = { nullptr };
+    ControlCommand *control[ 256 ] = { nullptr }; // indexed by uint8_t control code 0x00 .. 0xFF
     ControlCommand *firstControlCommand = nullptr;
 
     // Communication with device

@@ -88,9 +88,10 @@ bool ScopeDevice::connectDevice( QString &errorMessage ) {
     serialNumber = readUSBdescriptor( handle, descriptor.iSerialNumber );
     // Find and claim interface
     errorCode = LIBUSB_ERROR_NOT_FOUND;
-    libusb_config_descriptor *configDescriptor;
-    libusb_get_config_descriptor( device, 0, &configDescriptor );
-    for ( int interfaceIndex = 0; interfaceIndex < int( configDescriptor->bNumInterfaces ); ++interfaceIndex ) {
+    libusb_config_descriptor *configDescriptor = nullptr;
+    if ( libusb_get_config_descriptor( device, 0, &configDescriptor ) != LIBUSB_SUCCESS )
+        configDescriptor = nullptr;
+    for ( int interfaceIndex = 0; configDescriptor && interfaceIndex < int( configDescriptor->bNumInterfaces ); ++interfaceIndex ) {
         const libusb_interface *pInterface = &configDescriptor->interface[ interfaceIndex ];
         if ( pInterface->num_altsetting < 1 )
             continue;
@@ -110,6 +111,8 @@ bool ScopeDevice::connectDevice( QString &errorMessage ) {
                            .arg( libUsbErrorString( errorCode ) )
                            .arg( libusb_get_bus_number( device ), 3, 10, QLatin1Char( '0' ) )
                            .arg( libusb_get_device_address( device ), 3, 10, QLatin1Char( '0' ) );
+        libusb_close( handle ); // do not leak the handle, the next connectDevice() opens a new one
+        handle = nullptr;
         return false;
     }
     disconnected = false;

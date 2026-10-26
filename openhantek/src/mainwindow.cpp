@@ -334,19 +334,24 @@ MainWindow::MainWindow( HantekDsoControl *dsoControl, DsoSettings *settings, Exp
             return;
         if ( dsoSettings->scope.verboseLevel > 2 )
             qDebug().noquote() << "  MW::uC()" << channel << QString::number( channelMask, 2 );
-        bool mathUsed = 3 == channelMask; // dsoSettings->scope.anyUsed( spec->channels );
+        // the mask tells only about the sending dock, get the channels needed by MATH (voltage or spectrum) from the settings
+        const DsoSettingsScope &scope = dsoSettings->scope;
+        unsigned mathMask = 0;
+        if ( scope.anyUsed( spec->channels ) )
+            mathMask = Dso::mathChannelsUsed( Dso::getMathMode( scope.voltage[ spec->channels ] ) );
 
         // Normal channel, check if voltage/spectrum or math channel is used
         if ( channel < spec->channels )
-            dsoControl->setChannelUsed( channel, mathUsed || dsoSettings->scope.anyUsed( channel ) );
+            dsoControl->setChannelUsed( channel, ( mathMask & ( 1u << channel ) ) || scope.anyUsed( channel ) );
         // Math channel, update all channels
         else if ( channel == spec->channels ) {
             for ( ChannelID c = 0; c < spec->channels; ++c )
-                dsoControl->setChannelUsed( c, ( ( c + 1 ) & channelMask ) || dsoSettings->scope.anyUsed( c ) );
+                dsoControl->setChannelUsed( c, ( mathMask & ( 1u << c ) ) || scope.anyUsed( c ) );
         }
     };
-    connect( voltageDock, &VoltageDock::usedChannelChanged, usedChanged );
-    connect( spectrumDock, &SpectrumDock::usedChannelChanged, usedChanged );
+    // run in the thread of dsoControl like the other connections to it
+    connect( voltageDock, &VoltageDock::usedChannelChanged, dsoControl, usedChanged );
+    connect( spectrumDock, &SpectrumDock::usedChannelChanged, dsoControl, usedChanged );
 
     connect( voltageDock, &VoltageDock::modeChanged, dsoWidget, &DsoWidget::updateMathMode );
     connect( voltageDock, &VoltageDock::gainChanged, dsoControl, [ dsoControl, spec ]( ChannelID channel, double gain ) {
@@ -450,6 +455,7 @@ MainWindow::MainWindow( HantekDsoControl *dsoControl, DsoSettings *settings, Exp
         dsoSettings->mainWindowState = saveState();
 
         DsoConfigDialog *configDialog = new DsoConfigDialog( dsoSettings, this );
+        configDialog->setAttribute( Qt::WA_DeleteOnClose ); // delete after Ok / Cancel
         configDialog->setModal( true );
         configDialog->show();
     } );

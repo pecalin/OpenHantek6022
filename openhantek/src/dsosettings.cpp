@@ -64,6 +64,7 @@ DsoSettings::DsoSettings( const ScopeDevice *scopeDevice, int verboseLevel, bool
         std::unique_ptr< QSettings >( new QSettings( QCoreApplication::organizationName(), deviceName + "_" + deviceID ) );
     // and get the persistent settings
     load();
+    resetSettings = false; // reset only the persistent settings at startup, never a config file loaded later
 }
 
 
@@ -90,6 +91,11 @@ bool DsoSettings::loadFromFile( const QString &filename ) {
     if ( QFileInfo( filename ).isReadable() ) {
         std::unique_ptr< QSettings > local = std::unique_ptr< QSettings >( new QSettings( filename, QSettings::IniFormat ) );
         if ( local->status() == QSettings::NoError ) {
+            // load() would clear an incompatible config file, keep the file and the current settings instead
+            if ( local->value( "configuration/version", 0 ).toUInt() < CONFIG_VERSION ) {
+                qWarning() << "Incompatible version of config file " << filename;
+                return false;
+            }
             storeSettings.swap( local );
             load();
             storeSettings.swap( local );

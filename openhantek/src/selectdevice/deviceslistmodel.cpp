@@ -66,7 +66,9 @@ void DevicesListModel::updateDeviceList() {
     entries.clear();
     endResetModel();
     const FindDevices::DeviceList *devices = findDevices->getDevices();
-    beginInsertRows( QModelIndex(), 0, int( devices->size() ) );
+    if ( devices->empty() )
+        return;
+    beginInsertRows( QModelIndex(), 0, int( devices->size() ) - 1 );
     for ( auto &i : *devices ) {
         DeviceListEntry entry;
         entry.name = i.second->getModel()->name;

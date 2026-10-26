@@ -126,8 +126,7 @@ void DsoConfigScopePage::saveSettings() {
     settings->view.interpolation = Dso::InterpolationMode( interpolationComboBox->currentIndex() );
     settings->view.digitalPhosphorDepth = unsigned( digitalPhosphorDepthSpinBox->value() );
     settings->alwaysSave = saveOnExitCheckBox->isChecked();
-    if ( defaultSettingsCheckBox->isChecked() )
-        settings->configVersion = 0;
+    settings->configVersion = defaultSettingsCheckBox->isChecked() ? 0 : CONFIG_VERSION;
     settings->view.zoomImage = zoomImageCheckBox->isChecked();
     settings->view.zoomHeightIndex = zoomHeightComboBox->currentIndex();
     settings->view.exportScaleValue = exportScaleSpinBox->value();

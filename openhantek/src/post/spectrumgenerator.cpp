@@ -28,16 +28,36 @@ SpectrumGenerator::SpectrumGenerator( const DsoSettingsScope *scope, const DsoSe
 SpectrumGenerator::~SpectrumGenerator() {
     if ( scope->verboseLevel > 1 )
         qDebug() << " SpectrumGenerator::~SpectrumGenerator()";
-    if ( analysis->reuseFftPlan ) {
-        if ( fftPlan_R2HC ) {
-            fftw_destroy_plan( fftPlan_R2HC );
-            fftPlan_R2HC = nullptr;
-        }
-        if ( fftPlan_HC2R ) {
-            fftw_destroy_plan( fftPlan_HC2R );
-            fftPlan_HC2R = nullptr;
-        }
+    destroyFftPlans(); // also if "reuseFftPlan" was switched off after the plans were created
+}
+
+
+// build optimized plans for this sample count that are reused for all transformations (this takes some time)
+// FFTW_MEASURE overwrites the arrays during planning, so use scratch arrays with the same size and alignment
+void SpectrumGenerator::createFftPlans( int sampleCount ) {
+    destroyFftPlans();
+    double *in = fftw_alloc_real( size_t( sampleCount ) );
+    double *out = fftw_alloc_real( size_t( sampleCount ) );
+    if ( in && out ) {
+        fftPlan_R2HC = fftw_plan_r2r_1d( sampleCount, in, out, FFTW_R2HC, FFTW_MEASURE );
+        fftPlan_HC2R = fftw_plan_r2r_1d( sampleCount, in, out, FFTW_HC2R, FFTW_MEASURE );
+        fftPlanSize = sampleCount;
     }
+    fftw_free( in );
+    fftw_free( out );
+}
+
+
+void SpectrumGenerator::destroyFftPlans() {
+    if ( fftPlan_R2HC ) {
+        fftw_destroy_plan( fftPlan_R2HC );
+        fftPlan_R2HC = nullptr;
+    }
+    if ( fftPlan_HC2R ) {
+        fftw_destroy_plan( fftPlan_HC2R );
+        fftPlan_HC2R = nullptr;
+    }
+    fftPlanSize = 0;
 }
 
 
@@ -265,15 +285,16 @@ void SpectrumGenerator::process( PPresult *result ) {
         fftHcSpectrum = fftw_alloc_real( size_t( std::max( SAMPLESIZE, sampleCount ) ) );
         if ( nullptr == fftHcSpectrum ) // error
             break;
-        if ( analysis->reuseFftPlan ) {    // build one optimized plan and reuse it for all transformations
-            if ( nullptr == fftPlan_R2HC ) // not yet created, do it now (this takes some time)
-                fftPlan_R2HC = fftw_plan_r2r_1d( sampleCount, fftWindowedValues, fftHcSpectrum, FFTW_R2HC, FFTW_MEASURE );
+        // a plan is only valid for one sample count, e.g. roll mode uses less samples than normal mode
+        if ( analysis->reuseFftPlan && fftPlanSize != sampleCount ) // not yet created or size changed
+            createFftPlans( sampleCount );                          // build optimized plans, reuse them
+        const bool useFftPlans = analysis->reuseFftPlan && fftPlan_R2HC && fftPlan_HC2R;
+        if ( useFftPlans ) {
             fftw_execute_r2r( fftPlan_R2HC, fftWindowedValues, fftHcSpectrum ); // but it will run faster
         } else { // build a more generic plan, this takes much less time than the optimized plan
-            fftPlan_R2HC = fftw_plan_r2r_1d( sampleCount, fftWindowedValues, fftHcSpectrum, FFTW_R2HC, FFTW_ESTIMATE );
-            fftw_execute( fftPlan_R2HC );      // use it once
-            fftw_destroy_plan( fftPlan_R2HC ); // and destroy it
-            fftPlan_R2HC = nullptr;            // no plan available;
+            fftw_plan fftPlan = fftw_plan_r2r_1d( sampleCount, fftWindowedValues, fftHcSpectrum, FFTW_R2HC, FFTW_ESTIMATE );
+            fftw_execute( fftPlan );      // use it once
+            fftw_destroy_plan( fftPlan ); // and destroy it
         }
         // Do an autocorrelation to get the frequency of the signal
         // fft: f(t) o-- F(ω); calculate power spectrum |F(ω)|²
@@ -324,16 +345,12 @@ void SpectrumGenerator::process( PPresult *result ) {
         fftHcSpectrum = nullptr;
 
         // Do half-complex to real inverse transformation -> autocorrelation
-        if ( analysis->reuseFftPlan ) { // same as above for time -> spectrum
-            if ( nullptr == fftPlan_HC2R )
-                fftPlan_HC2R = fftw_plan_r2r_1d( sampleCount, fftPowerSpectrum, fftAutoCorrelation, FFTW_HC2R, FFTW_MEASURE );
+        if ( useFftPlans ) { // same as above for time -> spectrum
             fftw_execute_r2r( fftPlan_HC2R, fftPowerSpectrum, fftAutoCorrelation );
         } else {
-            fftw_plan fftPlan_HC2R =
-                fftw_plan_r2r_1d( sampleCount, fftPowerSpectrum, fftAutoCorrelation, FFTW_HC2R, FFTW_ESTIMATE );
-            fftw_execute( fftPlan_HC2R );
-            fftw_destroy_plan( fftPlan_HC2R );
-            fftPlan_HC2R = nullptr;
+            fftw_plan fftPlan = fftw_plan_r2r_1d( sampleCount, fftPowerSpectrum, fftAutoCorrelation, FFTW_HC2R, FFTW_ESTIMATE );
+            fftw_execute( fftPlan );
+            fftw_destroy_plan( fftPlan );
         }
         // content was destroyed during iFFT, free the memory
         fftw_free( fftPowerSpectrum );

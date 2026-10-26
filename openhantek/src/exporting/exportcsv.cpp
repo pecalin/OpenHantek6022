@@ -76,25 +76,29 @@ void ExporterCSV::fillHeaders( QTextStream &csvStream, const ExporterData &dto, 
 void ExporterCSV::fillData( QTextStream &csvStream, const ExporterData &dto, const char *sep ) {
     std::vector< const SampleValues * > voltageData = dto.getVoltageData();
     std::vector< const SampleValues * > spectrumData = dto.getSpectrumData();
+    // use the local decimal point, but no group separator (e.g. "1,500" in en_US would break the "," separated columns)
+    QLocale locale;
+    locale.setNumberOptions( QLocale::OmitGroupSeparator );
+    auto number = [ &locale ]( double value ) { return locale.toString( value, 'g', 10 ); };
 
     for ( unsigned int row = 0; row < dto.getMaxRow(); ++row ) {
 
-        csvStream << QLocale().toString( dto.getTimeInterval() * row );
+        csvStream << number( dto.getTimeInterval() * row );
         for ( ChannelID channel = 0; channel < dto.getChannelsCount(); ++channel ) {
             if ( voltageData[ channel ] != nullptr ) {
                 csvStream << sep;
                 if ( row < voltageData[ channel ]->samples.size() ) {
-                    csvStream << QLocale().toString( voltageData[ channel ]->samples[ row ] );
+                    csvStream << number( voltageData[ channel ]->samples[ row ] );
                 }
             }
         }
         if ( dto.isSpectrumUsed() ) {
-            csvStream << sep << QLocale().toString( dto.getFreqInterval() * row );
+            csvStream << sep << number( dto.getFreqInterval() * row );
             for ( ChannelID channel = 0; channel < dto.getChannelsCount(); ++channel ) {
                 if ( spectrumData[ channel ] != nullptr ) {
                     csvStream << sep;
                     if ( row < spectrumData[ channel ]->samples.size() ) {
-                        csvStream << QLocale().toString( spectrumData[ channel ]->samples[ row ] );
+                        csvStream << number( spectrumData[ channel ]->samples[ row ] );
                     }
                 }
             }
