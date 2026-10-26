@@ -217,6 +217,11 @@ MainWindow::MainWindow( HantekDsoControl *dsoControl, DsoSettings *settings, Exp
     addDockWidget( Qt::RightDockWidgetArea, spectrumDock );
 
     restoreGeometry( dsoSettings->mainWindowGeometry );
+#ifdef Q_OS_MACOS
+    // restoring the full screen mode together with the dock layout crashes Qt at the first show()
+    // start with a normal window, full screen can be switched on again by the user
+    setWindowState( windowState() & ~Qt::WindowFullScreen );
+#endif
     restoreState( dsoSettings->mainWindowState );
 
     // Central oszilloscope widget
