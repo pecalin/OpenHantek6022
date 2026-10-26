@@ -42,6 +42,7 @@
     </property>
     <addaction name="actionSampling"/>
     <addaction name="actionRefresh"/>
+    <addaction name="actionAutoSet"/>
     <addaction name="separator"/>
     <addaction name="actionPhosphor"/>
     <addaction name="actionHistogram"/>
@@ -93,6 +94,7 @@
    </attribute>
    <addaction name="actionSampling"/>
    <addaction name="actionRefresh"/>
+   <addaction name="actionAutoSet"/>
    <addaction name="separator"/>
    <addaction name="actionPhosphor"/>
    <addaction name="actionHistogram"/>
@@ -145,6 +147,11 @@
    </property>
    <property name="text">
     <string>&amp;Refresh</string>
+   </property>
+  </action>
+  <action name="actionAutoSet">
+   <property name="text">
+    <string>Au&amp;toset</string>
    </property>
   </action>
   <action name="actionPhosphor">

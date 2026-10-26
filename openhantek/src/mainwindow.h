@@ -11,6 +11,7 @@
 #include "scopesettings.h"
 #include "usb/devicereconnectionsupervisor.h"
 
+class AutoSet;
 class SpectrumGenerator;
 class HantekDsoControl;
 class DsoSettings;
@@ -56,6 +57,7 @@ class MainWindow : public QMainWindow {
 
     // Central widgets
     DsoWidget *dsoWidget;
+    AutoSet *autoSet = nullptr; ///< Finds a good display setup for the signals
 
     // Settings used for the whole program
     DsoSettings *dsoSettings;

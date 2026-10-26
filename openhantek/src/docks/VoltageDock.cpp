@@ -213,6 +213,15 @@ void VoltageDock::setGain( ChannelID channel, unsigned gainStepIndex ) {
 }
 
 
+void VoltageDock::changeGain( ChannelID channel, unsigned gainStepIndex ) {
+    if ( channel >= scope->voltage.size() || int( gainStepIndex ) >= channelBlocks[ channel ].gainComboBox->count() )
+        return;
+    if ( scope->verboseLevel > 2 )
+        qDebug() << "  VDock::changeGain()" << channel << gainStepIndex;
+    channelBlocks[ channel ].gainComboBox->setCurrentIndex( int( gainStepIndex ) ); // emits gainChanged()
+}
+
+
 void VoltageDock::setAttn( ChannelID channel, double attnValue ) {
     if ( scope->verboseLevel > 2 )
         qDebug() << "  VDock::setAttn()" << channel << attnValue;

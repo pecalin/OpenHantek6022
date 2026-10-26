@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file alias="switch_6022BL.png">images/switch_6022BL.png</file>
         <file>images/OpenHantek.svg</file>
+        <file>images/lighttheme/autoset.svg</file>
         <file>images/lighttheme/histogram.svg</file>
         <file>images/lighttheme/measure.svg</file>
         <file>images/lighttheme/pause.svg</file>
@@ -10,6 +11,7 @@
         <file>images/lighttheme/refresh.svg</file>
         <file>images/lighttheme/zoom.svg</file>
 
+        <file>images/darktheme/autoset.svg</file>
         <file>images/darktheme/histogram.svg</file>
         <file>images/darktheme/measure.svg</file>
         <file>images/darktheme/pause.svg</file>

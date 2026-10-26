@@ -158,6 +158,23 @@ double HorizontalDock::setTimebase( double timebase ) {
 }
 
 
+double HorizontalDock::changeTimebase( double timebase ) {
+    // timebaseSteps are repeated in each decade
+    double decade = pow( 10, floor( log10( timebase ) ) );
+    double vNorm = timebase / decade;
+    for ( int i = 0; i < timebaseSteps.size() - 1; ++i ) {
+        if ( timebaseSteps.at( i ) <= vNorm && vNorm < timebaseSteps.at( i + 1 ) ) {
+            timebase = decade * timebaseSteps.at( i );
+            break;
+        }
+    }
+    if ( scope->verboseLevel > 2 )
+        qDebug() << "  HDock::changeTimebase()" << timebase;
+    timebaseSiSpinBox->setValue( timebase ); // emits timebaseChanged(), the spin box limits the value
+    return timebaseSiSpinBox->value();
+}
+
+
 int HorizontalDock::setFormat( Dso::GraphFormat format ) {
     if ( scope->verboseLevel > 2 )
         qDebug() << "  HDock::setFormat()" << format;

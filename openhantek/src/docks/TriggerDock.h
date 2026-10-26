@@ -45,6 +45,14 @@ class TriggerDock : public QDockWidget {
     /// \param slope The trigger slope.
     void setSlope( Dso::Slope slope );
 
+    /// \brief Changes the trigger mode like a user selection, the change is signalled.
+    /// \param mode The trigger mode.
+    void changeMode( Dso::TriggerMode mode );
+
+    /// \brief Changes the trigger source like a user selection, the change is signalled.
+    /// \param id The number of the channel, that should be used as trigger.
+    void changeSource( int id );
+
   public slots:
     /// \brief Loads settings into GUI
     /// \param scope Settings to load

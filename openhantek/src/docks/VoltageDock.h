@@ -41,6 +41,11 @@ class VoltageDock : public QDockWidget {
     /// \param gain The gain in volts.
     void setGain( ChannelID channel, unsigned gainStepIndex );
 
+    /// \brief Changes the gain for a channel like a user selection, the change is signalled.
+    /// \param channel The channel, whose gain should be changed.
+    /// \param gainStepIndex The index of the gain step.
+    void changeGain( ChannelID channel, unsigned gainStepIndex );
+
     /// \brief Sets the probe attenuation for a channel.
     /// \param channel The channel, whose attn should be set.
     /// \param attn The attn value.

@@ -141,6 +141,23 @@ void TriggerDock::setMode( Dso::TriggerMode mode ) {
     emit modeChanged( scope->trigger.mode );
 }
 
+void TriggerDock::changeMode( Dso::TriggerMode mode ) {
+    int index = int( std::find( mSpec->triggerModes.begin(), mSpec->triggerModes.end(), mode ) - mSpec->triggerModes.begin() );
+    if ( index >= modeComboBox->count() ) // mode not supported or not available (ROLL)
+        return;
+    if ( scope->verboseLevel > 2 )
+        qDebug() << "  TDock::changeMode()" << int( mode );
+    modeComboBox->setCurrentIndex( index ); // emits modeChanged()
+}
+
+void TriggerDock::changeSource( int id ) {
+    if ( id < 0 || id >= sourceComboBox->count() )
+        return;
+    if ( scope->verboseLevel > 2 )
+        qDebug() << "  TDock::changeSource()" << id;
+    sourceComboBox->setCurrentIndex( id ); // emits sourceChanged()
+}
+
 void TriggerDock::setSlope( Dso::Slope slope ) {
     if ( scope->verboseLevel > 2 )
         qDebug() << "  TDock::setSlope()" << int( slope );

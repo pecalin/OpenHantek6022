@@ -159,6 +159,11 @@ class DsoWidget : public QWidget {
     // Scope control
     void updateSlidersSettings();
 
+    /// \brief Changes the screen offset of a channel like moving its slider, the change is signalled.
+    void changeOffset( ChannelID channel, double offset ) { updateOffset( channel, offset, false, QPoint() ); }
+    /// \brief Changes the trigger level of a channel like moving its slider, the change is signalled.
+    void changeTriggerLevel( ChannelID channel, double level ) { updateTriggerLevel( channel, level, false, QPoint() ); }
+
   private slots:
     // Sliders
     void updateOffset( ChannelID channel, double value, bool pressed, QPoint globalPos );

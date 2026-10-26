@@ -7,6 +7,7 @@
 #include "SpectrumDock.h"
 #include "TriggerDock.h"
 #include "VoltageDock.h"
+#include "autoset.h"
 
 #include "configdialog.h"
 #include "dockwindows.h"
@@ -79,6 +80,12 @@ MainWindow::MainWindow( HantekDsoControl *dsoControl, DsoSettings *settings, Exp
         ui->actionRefresh->setToolTip( tr( "Refresh the screen trace for slow 'Roll' mode" ) );
     else
         ui->actionRefresh->setToolTip( QString() );
+    ui->actionAutoSet->setIcon( QIcon( iconPath + "autoset.svg" ) );
+    ui->actionAutoSet->setShortcut( Qt::Key::Key_A );
+    if ( dsoSettings->scope.toolTipVisible )
+        ui->actionAutoSet->setToolTip( tr( "Find a good view of the signals: set gain, offset, timebase and trigger automatically" ) );
+    else
+        ui->actionAutoSet->setToolTip( QString() );
     ui->actionPhosphor->setIcon( QIcon( iconPath + "phosphor.svg" ) );
     ui->actionPhosphor->setShortcut( Qt::Key::Key_P );
     if ( dsoSettings->scope.toolTipVisible )
@@ -228,8 +235,17 @@ MainWindow::MainWindow( HantekDsoControl *dsoControl, DsoSettings *settings, Exp
     dsoWidget = new DsoWidget( &dsoSettings->scope, &dsoSettings->view, spec, this );
     setCentralWidget( dsoWidget );
 
+    // Autoset uses the docks and the dso widget like a user
+    autoSet = new AutoSet( scope, voltageDock, horizontalDock, triggerDock, dsoWidget, this );
+    connect( autoSet, &AutoSet::statusMessage, statusBar(), &QStatusBar::showMessage );
+    connect( ui->actionAutoSet, &QAction::triggered, this, [ this ]() {
+        if ( !ui->actionSampling->isChecked() ) // autoset needs new samples
+            ui->actionSampling->trigger();
+        autoSet->start();
+    } );
+
     deviceCommandWidgets = { voltageDock, horizontalDock, triggerDock, spectrumDock, dsoWidget };
-    deviceCommandActions = { ui->actionOpen, ui->actionSampling, ui->actionRefresh, ui->actionCalibrateOffset,
+    deviceCommandActions = { ui->actionOpen, ui->actionSampling, ui->actionRefresh, ui->actionAutoSet, ui->actionCalibrateOffset,
                              ui->actionManualCommand };
 
     if ( dsoControl->getDevice()->isRealHW() ) { // enable online calibration and manual command input
@@ -569,6 +585,8 @@ MainWindow::~MainWindow() {
 void MainWindow::showNewData( std::shared_ptr< PPresult > newData ) {
     if ( dsoSettings->scope.verboseLevel > 5 )
         qDebug() << "     MainWindow::showNewData()" << newData->tag;
+    if ( autoSet->isActive() )
+        autoSet->input( newData );
     dsoWidget->showNew( newData );
 }
 
